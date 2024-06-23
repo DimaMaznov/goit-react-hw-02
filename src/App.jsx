@@ -1,35 +1,58 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from "react";
+import Description from "./Description/Description";
+import Options from "./Options/Options";
+import Feedback from "./Feedback/Feedback";
+import Notification from "./Notification/Notification";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+    
+    const [properties, setProperties] = useState(() => {
+        const saved = localStorage.getItem("feedback");
+        return saved ? JSON.parse(saved) : { good: 0, neutral: 0, bad: 0 };
+    });
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+
+    useEffect(() => {
+        localStorage.setItem("feedback", JSON.stringify(properties));
+    }, [properties]);
+
+    const totalFeedback = properties.good + properties.neutral + properties.bad;
+    const positiveFeedback = Math.round((properties.good / totalFeedback) * 100)
+
+    const updateGood = () => { 
+        setProperties(prevState => ({
+            ...prevState,
+            good: prevState.good + 1
+        }));
+    };
+
+    const updateNeutral = () => { 
+        setProperties(prevState => ({
+            ...prevState,
+            neutral: prevState.neutral + 1
+        }));
+    };
+    
+    const updateBad = () => { 
+        setProperties(prevState => ({
+            ...prevState,
+            bad: prevState.bad + 1
+        }));
+    };
+
+    const clickReset = () => {
+        setProperties({
+            good: 0,
+            neutral: 0,
+            bad: 0
+        });
+    };
+
+    return (
+        <div>
+            <Description/>
+            <Options updateGood={updateGood} updateNeutral={updateNeutral} updateBad={updateBad} clickReset= {clickReset} totalFeedback={totalFeedback} />
+          { totalFeedback> 0 ?(<Feedback good={properties.good} neutral={properties.neutral} bad={properties.bad} totalFeedback={totalFeedback} positive={positiveFeedback} />) :(<Notification/>) }
+        </div>
+    );
 }
-
-export default App
